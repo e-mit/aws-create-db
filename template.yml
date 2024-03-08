@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: A simple EC2 instance
+Parameters:
+  AMIname:
+    # The default AMI is for Amazon Linux 2023 x86_64,
+    # which is recommended and is free tier compatible
+    Default: ami-09885f3ec1667cbfc
+    Description: The AMI (machine image) to use for the EC2
+    Type: String
+    MinLength: 1
+    MaxLength: 30
+  keyname:
+    Description: The name of the key pair to use
+    Type: String
+    MinLength: 1
+    MaxLength: 30
+Resources:
+  MyEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId:
+        Ref: AMIname
+      InstanceType: t2.micro
+      KeyName:
+        Ref: keyname
+      SecurityGroups:
+        - !Ref testSecurityGroup
+  testSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Only allow EC2 access via SSH from one IP
+      GroupName: testGroup
+      SecurityGroupIngress: 
+        - IpProtocol: tcp
+          # SSH on port 22
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 2.216.148.194/32
