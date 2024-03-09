@@ -14,6 +14,14 @@ Parameters:
     Type: String
     MinLength: 1
     MaxLength: 30
+  DBPassword:
+    NoEcho: 'true'
+    Description: Password for database access
+    Type: String
+    MinLength: '8'
+    MaxLength: '41'
+    AllowedPattern: '[a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
 Resources:
   MyEC2Instance:
     Type: AWS::EC2::Instance
@@ -24,15 +32,77 @@ Resources:
       KeyName:
         Ref: keyname
       SecurityGroups:
-        - !Ref testSecurityGroup
-  testSecurityGroup:
+        - !Ref SSHsecurityGroup
+        - !Ref EC2securityGroup
+  SSHsecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Only allow EC2 access via SSH from one IP
-      GroupName: testGroup
+      GroupName: sshGroup
       SecurityGroupIngress: 
         - IpProtocol: tcp
           # SSH on port 22
           FromPort: 22
           ToPort: 22
           CidrIp: 2.216.148.194/32
+  SSHsecurityGroupEgressRule:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      CidrIp: 0.0.0.0/0
+      IpProtocol: tcp
+      FromPort: 443
+      ToPort: 443
+      Description: Allow outgoing for package installation
+      GroupId: !GetAtt SSHsecurityGroup.GroupId
+  EC2securityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allows EC2 to RDS comms on EC2
+      GroupName: ec2group
+      SecurityGroupIngress:
+          # Block all incoming (allow only localhost)
+        - CidrIp: 127.0.0.1/32
+          IpProtocol: "-1"
+  EC2securityGroupEgressRule:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 5432
+      ToPort: 5432
+      DestinationSecurityGroupId: !GetAtt DBsecurityGroup.GroupId
+      GroupId: !GetAtt EC2securityGroup.GroupId
+  rdb:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: 5
+      AutoMinorVersionUpgrade: false
+      DBInstanceClass: db.t3.micro
+      DBInstanceIdentifier: testdbi
+      Engine: postgres
+      EngineVersion: "16.1"
+      MasterUsername: dbuser
+      MasterUserPassword: !Ref DBPassword
+      MaxAllocatedStorage: 20
+      PubliclyAccessible: false
+      VPCSecurityGroups:
+        - !GetAtt DBsecurityGroup.GroupId
+  DBsecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allows EC2 to RDS comms on RDS
+      GroupName: dbgroup
+  DBsecurityGroupEgressRule:
+    Type: AWS::EC2::SecurityGroupEgress
+    Properties:
+      CidrIp: 127.0.0.1/32
+      IpProtocol: "-1"
+      Description: Block all outgoing (allow only localhost)
+      GroupId: !GetAtt DBsecurityGroup.GroupId
+  DBsecurityGroupIngressRule:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 5432
+      ToPort: 5432
+      SourceSecurityGroupId: !GetAtt EC2securityGroup.GroupId
+      GroupId: !GetAtt DBsecurityGroup.GroupId
