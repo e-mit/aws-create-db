@@ -22,6 +22,11 @@ Parameters:
     MaxLength: '41'
     AllowedPattern: '[a-zA-Z0-9]*'
     ConstraintDescription: must contain only alphanumeric characters.
+  allowedIP:
+    Type: String
+    Description: The IP address which can SSH to the EC2 instance.
+    AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})
+    ConstraintDescription: must be a valid IPv4 address.
 Resources:
   MyEC2Instance:
     Type: AWS::EC2::Instance
@@ -44,7 +49,11 @@ Resources:
           # SSH on port 22
           FromPort: 22
           ToPort: 22
-          CidrIp: 2.216.148.194/32
+          CidrIp:
+            !Join
+            - '/'
+            - - !Ref allowedIP
+              - '32'
   SSHsecurityGroupEgressRule:
     Type: AWS::EC2::SecurityGroupEgress
     Properties:
