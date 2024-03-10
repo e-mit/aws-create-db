@@ -27,8 +27,10 @@ Parameters:
     Description: The IP address which can SSH to the EC2 instance.
     AllowedPattern: (\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})
     ConstraintDescription: must be a valid IPv4 address.
+
 Resources:
-  MyEC2Instance:
+
+  EC2Instance:
     Type: AWS::EC2::Instance
     Properties:
       ImageId:
@@ -38,12 +40,13 @@ Resources:
         Ref: keyname
       SecurityGroups:
         - !Ref SSHsecurityGroup
-        - !Ref EC2securityGroup
+        - !Ref EC2DBsecurityGroup
+
   SSHsecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Only allow EC2 access via SSH from one IP
-      GroupName: sshGroup
+      GroupName: ssh-ec2
       SecurityGroupIngress: 
         - IpProtocol: tcp
           # SSH on port 22
@@ -63,24 +66,26 @@ Resources:
       ToPort: 443
       Description: Allow outgoing for package installation
       GroupId: !GetAtt SSHsecurityGroup.GroupId
-  EC2securityGroup:
+
+  EC2DBsecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allows EC2 to RDS comms on EC2
-      GroupName: ec2group
+      GroupName: ec2-db
       SecurityGroupIngress:
           # Block all incoming (allow only localhost)
         - CidrIp: 127.0.0.1/32
           IpProtocol: "-1"
-  EC2securityGroupEgressRule:
+  EC2DBsecurityGroupEgressRule:
     Type: AWS::EC2::SecurityGroupEgress
     Properties:
       IpProtocol: tcp
       FromPort: 5432
       ToPort: 5432
-      DestinationSecurityGroupId: !GetAtt DBsecurityGroup.GroupId
-      GroupId: !GetAtt EC2securityGroup.GroupId
-  rdb:
+      DestinationSecurityGroupId: !GetAtt DBEC2securityGroup.GroupId
+      GroupId: !GetAtt EC2DBsecurityGroup.GroupId
+
+  postgresInstance:
     Type: AWS::RDS::DBInstance
     Properties:
       AllocatedStorage: 5
@@ -94,24 +99,25 @@ Resources:
       MaxAllocatedStorage: 20
       PubliclyAccessible: false
       VPCSecurityGroups:
-        - !GetAtt DBsecurityGroup.GroupId
-  DBsecurityGroup:
+        - !GetAtt DBEC2securityGroup.GroupId
+
+  DBEC2securityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allows EC2 to RDS comms on RDS
       GroupName: dbgroup
-  DBsecurityGroupEgressRule:
+  DBEC2securityGroupEgressRule:
     Type: AWS::EC2::SecurityGroupEgress
     Properties:
       CidrIp: 127.0.0.1/32
       IpProtocol: "-1"
       Description: Block all outgoing (allow only localhost)
-      GroupId: !GetAtt DBsecurityGroup.GroupId
-  DBsecurityGroupIngressRule:
+      GroupId: !GetAtt DBEC2securityGroup.GroupId
+  DBEC2securityGroupIngressRule:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       IpProtocol: tcp
       FromPort: 5432
       ToPort: 5432
-      SourceSecurityGroupId: !GetAtt EC2securityGroup.GroupId
-      GroupId: !GetAtt DBsecurityGroup.GroupId
+      SourceSecurityGroupId: !GetAtt EC2DBsecurityGroup.GroupId
+      GroupId: !GetAtt DBEC2securityGroup.GroupId

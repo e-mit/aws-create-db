@@ -37,7 +37,7 @@ print(json.load(sys.stdin)['DBInstances'][0]['Endpoint']['Address'])")
 # Get the EC2 instance ID
 EC2_ID=$(aws cloudformation describe-stack-resource \
 --stack-name $STACK_NAME \
---logical-resource-id MyEC2Instance | \
+--logical-resource-id EC2Instance | \
 python3 -c "import sys, json
 print(json.load(sys.stdin)['StackResourceDetail']['PhysicalResourceId'])")
 
