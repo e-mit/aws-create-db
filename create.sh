@@ -1,12 +1,12 @@
 #!/bin/bash
 
+# Create a stack instance according to the parameters supplied in the
+# environment variables. For an example configuration, see config.sh
+
+####################################################
+
 # Prevent terminal output waiting:
 export AWS_PAGER=""
-
-KEY_NAME=testKey
-STACK_NAME=testDBstack
-KEY_FILENAME=key.pem
-MY_IP=$(curl -4 icanhazip.com)
 
 if [[ -z $DB_PASSWORD ]]; then
     echo ERROR: DB_PASSWORD is not set
@@ -24,7 +24,7 @@ aws cloudformation create-stack \
 --template-body file://template.yml \
 --parameters ParameterKey=keyname,ParameterValue=$KEY_NAME \
 ParameterKey=DBPassword,ParameterValue=$DB_PASSWORD \
-ParameterKey=allowedIP,ParameterValue=$MY_IP
+ParameterKey=allowedIP,ParameterValue=$ALLOWED_SSH_IP
 
 read -p "Press any key to continue... " -n1 -s; echo
 
