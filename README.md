@@ -1,5 +1,9 @@
-# AWS RDS PostgreSQL setup
+# AWS create DB
 
-Scripts and template to create a private AWS RDS instance providing a PostgreSQL database.
+Scripts and template to create a private AWS RDS instance hosting a PostgreSQL database.
 
-A public EC2 instance is also created to allow manual access to the database. This is non-essential and can be stopped or terminated if unwanted.
+A public EC2 instance is also created to allow access to the database.
+
+See also:
+- [github.com/e-mit/aws-ec2-grafana](https://github.com/e-mit/aws-ec2-grafana) to configure and deploy Grafana on the EC2 to display a public dashboard with PostgreSQL data
+- [github.com/e-mit/aws-lambda-get](https://github.com/e-mit/aws-lambda-get) and [github.com/e-mit/aws-lambda-db](https://github.com/e-mit/aws-lambda-db) for gathering data into the RDS using Lambda functions
