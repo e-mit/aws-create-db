@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: A simple EC2 instance
+Description: RDS instance with PostgreSQL and an EC2 instance for SSH
 Parameters:
   AMIname:
     # The default AMI is for Amazon Linux 2023 x86_64,
@@ -10,7 +10,7 @@ Parameters:
     MinLength: 1
     MaxLength: 30
   keyname:
-    Description: The name of the key pair to use
+    Description: The name of the PEM key pair for the EC2
     Type: String
     MinLength: 1
     MaxLength: 30
